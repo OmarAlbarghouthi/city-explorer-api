@@ -1,5 +1,10 @@
 import React from 'react'
 import axios from 'axios'
+import Movie from './components/Movie'
+import Weather from './components/Weather'
+
+
+
 
 class App extends React.Component {
 
@@ -7,80 +12,93 @@ class App extends React.Component {
 
     super(props);
     this.state = {
-      locationResl: {},
-      getDatainfo: [],
+     
+      dataInfo: [],
       searchQuery: '',
-      showAll: false
+      render: false,
+      movieInformation: [],
+      // MRes: {}
     }
 
   }
 
-  cityLoc = async (e) => {
-    e.preventDefault();
 
+  submitFun = async (event) => {
+    event.preventDefault();
 
     await this.setState({
-      searchQuery: e.target.city.value
+      searchQuery: event.target.city.value
     })
 
     try {
-      let locURL = `https://us1.locationiq.com/v1/search.php?key=${process.env.REACT_APP_API_LOCATION_KEY}&q=${this.state.searchQuery}&format=json`
-      let locResult = await axios.get(locURL)
-      console.log(locResult.data[0]);
+     
+      let weatherUrl = `${process.env.REACT_APP_SERVER_LINK}/weather?city=${this.state.searchQuery}`;
+      let weatherInfo = await axios.get(weatherUrl);
+      await this.setState({
 
-
-      this.setState({
-        locationResl: locResult.data[0],
-        showAll: true
+        dataInfo: weatherInfo.data,
+        render: true
 
       })
-      // getting weather data
-      let wthUrl = `http://localhost:3001/weather?cityName=${this.state.searchQuery}`;
-      let weatherData = await axios.get(wthUrl);
-      console.log(weatherData.data);
-     await this.setState({
+      
 
-        getDatainfo: weatherData.data
+
+      let movieUrl = `${process.env.REACT_APP_SERVER_LINK}/movie?query=${this.state.searchQuery}`;
+      let movieInfo = await axios.get(movieUrl);
+      
+      await this.setState({
+        render: true,
+        movieInformation: movieInfo.data
       })
-      // console.log(getDatainfo);
+      
 
 
     } catch {
-      console.log('something went wrong');
+      console.log('There is an error');
     }
+
+
 
   }
   render() {
     return (
       <div>
-        <h2>city explorer app </h2>
+        <h2> City Explorer </h2>
 
 
-        <form onSubmit={this.cityLoc}>
+        <form onSubmit={this.submitFun}> 
+        <label> Enter City Name:  </label>
+        <br></br>
+
           <input type="text" name='city' />
-          <input type="submit" value='render all' />
-
-
+          <input type="submit" value="Let's Go" />
         </form>
-        {this.state.showAll &&
 
+        {this.state.render &&
           <>
-            <p>city Name : {this.state.searchQuery}</p>
-            <p>latitude: {this.state.locationResl.lat}</p>
-            <p>longitude:{this.state.locationResl.lon}</p>
+            
             {
-            this.state.getDatainfo.map(element => {
-              return( <div>
-                    <p>Date{element.date}</p>
-                    <p>description {element.description}</p>
-              </div>
-              )
-            })
-          }
-          
+              this.state.dataInfo.map(element => {
+                return (
+                  <Weather ele={element} />
+                )
+              })
+            }
 
 
-            <img src={`https://maps.locationiq.com/v3/staticmap?key=${process.env.REACT_APP_API_LOCATION_KEY}&center=${this.state.locationResl.lat},${this.state.locationResl.lon}&zoom=10`} alt="" />
+
+
+            {
+              this.state.movieInformation.map(element => {
+                return (
+                  <Movie ele={element} />
+                )
+              })
+
+            }
+
+
+
           </>
         }
       </div>
